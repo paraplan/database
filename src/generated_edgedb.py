@@ -2,7 +2,10 @@
 #     'src/queries/cabinets/delete_cabinet.edgeql'
 #     'src/queries/cabinets/get_cabinet.edgeql'
 #     'src/queries/cabinets/insert_cabinet.edgeql'
+#     'src/queries/hours/insert_hour.edgeql'
 #     'src/queries/subgroup_hours/insert_subgroup_hour.edgeql'
+#     'src/queries/hours/select_hour_by_id.edgeql'
+#     'src/queries/hours/select_hours.edgeql'
 #     'src/queries/subgroup_hours/select_subgroup_hours.edgeql'
 #     'src/queries/subgroup_hours/select_subgroup_hours_by_id.edgeql'
 # WITH:
@@ -39,8 +42,25 @@ class GetCabinetResult(NoPydanticValidation):
 
 
 @dataclasses.dataclass
+class InsertHourResult(NoPydanticValidation):
+    id: uuid.UUID
+
+
+@dataclasses.dataclass
 class InsertSubgroupHourResult(NoPydanticValidation):
     id: uuid.UUID
+
+
+@dataclasses.dataclass
+class SelectHourByIdResult(NoPydanticValidation):
+    id: uuid.UUID
+    sub_groups: list[SelectHourByIdResultSubGroupsItem]
+
+
+@dataclasses.dataclass
+class SelectHourByIdResultSubGroupsItem(NoPydanticValidation):
+    id: uuid.UUID
+    occupation: str
 
 
 @dataclasses.dataclass
@@ -91,6 +111,24 @@ async def insert_cabinet(
     )
 
 
+async def insert_hour(
+    executor: edgedb.AsyncIOExecutor,
+    *,
+    id: list[uuid.UUID],
+) -> InsertHourResult:
+    return await executor.query_single(
+        """\
+        insert Hour {
+          sub_groups := (
+            select SubGroupHour
+            filter .id in array_unpack(<array<uuid>>$id)
+          )
+        }\
+        """,
+        id=id,
+    )
+
+
 async def insert_subgroup_hour(
     executor: edgedb.AsyncIOExecutor,
     *,
@@ -106,6 +144,29 @@ async def insert_subgroup_hour(
         """,
         cabinet_id=cabinet_id,
         occupation=occupation,
+    )
+
+
+async def select_hour_by_id(
+    executor: edgedb.AsyncIOExecutor,
+    *,
+    id: uuid.UUID,
+) -> SelectHourByIdResult | None:
+    return await executor.query_single(
+        """\
+        select Hour { ** } filter .id = <uuid>$id;\
+        """,
+        id=id,
+    )
+
+
+async def select_hours(
+    executor: edgedb.AsyncIOExecutor,
+) -> list[SelectHourByIdResult]:
+    return await executor.query(
+        """\
+        select Hour{ ** };\
+        """,
     )
 
 

@@ -27,12 +27,12 @@ distlib==0.3.8
 dnspython==2.6.1
     # via email-validator
 edgedb==1.9.0
-    # via database
+    # via vgpk-database
 email-validator==2.1.1
     # via fastapi
 fastapi==0.111.0
-    # via database
     # via fastapi-cli
+    # via vgpk-database
 fastapi-cli==0.0.3
     # via fastapi
 filelock==3.14.0
@@ -104,9 +104,9 @@ typing-extensions==4.11.0
 ujson==5.9.0
     # via fastapi
 uvicorn==0.29.0
-    # via database
     # via fastapi
     # via fastapi-cli
+    # via vgpk-database
 uvloop==0.19.0
     # via uvicorn
 virtualenv==20.26.1
