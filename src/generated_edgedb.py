@@ -2,7 +2,9 @@
 #     'src/queries/cabinets/delete_cabinet.edgeql'
 #     'src/queries/cabinets/get_cabinet.edgeql'
 #     'src/queries/cabinets/insert_cabinet.edgeql'
-#     'src/queries/insert_subgroup_hour.edgeql'
+#     'src/queries/subgroup_hours/insert_subgroup_hour.edgeql'
+#     'src/queries/subgroup_hours/select_subgroup_hours.edgeql'
+#     'src/queries/subgroup_hours/select_subgroup_hours_by_id.edgeql'
 # WITH:
 #     $ edgedb-py --file src/generated_edgedb.py
 
@@ -39,6 +41,13 @@ class GetCabinetResult(NoPydanticValidation):
 @dataclasses.dataclass
 class InsertSubgroupHourResult(NoPydanticValidation):
     id: uuid.UUID
+
+
+@dataclasses.dataclass
+class SelectSubgroupHoursResult(NoPydanticValidation):
+    id: uuid.UUID
+    occupation: str
+    cabinet: GetCabinetResult
 
 
 async def delete_cabinet(
@@ -93,8 +102,31 @@ async def insert_subgroup_hour(
         insert SubGroupHour {
           cabinet := (select Cabinet filter .id = <uuid>$cabinet_id),
           occupation := <str>$occupation
-        }\
+        };\
         """,
         cabinet_id=cabinet_id,
         occupation=occupation,
+    )
+
+
+async def select_subgroup_hours(
+    executor: edgedb.AsyncIOExecutor,
+) -> list[SelectSubgroupHoursResult]:
+    return await executor.query(
+        """\
+        select SubGroupHour { ** };\
+        """,
+    )
+
+
+async def select_subgroup_hours_by_id(
+    executor: edgedb.AsyncIOExecutor,
+    *,
+    id: uuid.UUID,
+) -> SelectSubgroupHoursResult | None:
+    return await executor.query_single(
+        """\
+        select SubGroupHour { ** } filter .id = <uuid>$id;\
+        """,
+        id=id,
     )
