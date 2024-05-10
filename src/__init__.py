@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from src.routers import routers
 
-app = FastAPI()
+app = FastAPI(title="VGPK Databases")
 
 for router in routers:
     app.include_router(router)

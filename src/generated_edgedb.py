@@ -2,8 +2,10 @@
 #     'src/queries/cabinets/delete_cabinet.edgeql'
 #     'src/queries/cabinets/get_cabinet.edgeql'
 #     'src/queries/cabinets/insert_cabinet.edgeql'
+#     'src/queries/groups/insert_group.edgeql'
 #     'src/queries/hours/insert_hour.edgeql'
 #     'src/queries/subgroup_hours/insert_subgroup_hour.edgeql'
+#     'src/queries/groups/select_groups.edgeql'
 #     'src/queries/hours/select_hour_by_id.edgeql'
 #     'src/queries/hours/select_hours.edgeql'
 #     'src/queries/subgroup_hours/select_subgroup_hours.edgeql'
@@ -42,6 +44,11 @@ class GetCabinetResult(NoPydanticValidation):
 
 
 @dataclasses.dataclass
+class InsertGroupResult(NoPydanticValidation):
+    id: uuid.UUID
+
+
+@dataclasses.dataclass
 class InsertHourResult(NoPydanticValidation):
     id: uuid.UUID
 
@@ -49,6 +56,13 @@ class InsertHourResult(NoPydanticValidation):
 @dataclasses.dataclass
 class InsertSubgroupHourResult(NoPydanticValidation):
     id: uuid.UUID
+
+
+@dataclasses.dataclass
+class SelectGroupsResult(NoPydanticValidation):
+    id: uuid.UUID
+    full_name: str
+    name: str
 
 
 @dataclasses.dataclass
@@ -111,6 +125,24 @@ async def insert_cabinet(
     )
 
 
+async def insert_group(
+    executor: edgedb.AsyncIOExecutor,
+    *,
+    full_name: str,
+    name: str,
+) -> InsertGroupResult:
+    return await executor.query_single(
+        """\
+        insert `Group` {
+            full_name := <str>$full_name,
+            name := <str>$name,
+        }\
+        """,
+        full_name=full_name,
+        name=name,
+    )
+
+
 async def insert_hour(
     executor: edgedb.AsyncIOExecutor,
     *,
@@ -144,6 +176,16 @@ async def insert_subgroup_hour(
         """,
         cabinet_id=cabinet_id,
         occupation=occupation,
+    )
+
+
+async def select_groups(
+    executor: edgedb.AsyncIOExecutor,
+) -> list[SelectGroupsResult]:
+    return await executor.query(
+        """\
+        select `Group` { ** };\
+        """,
     )
 
 
