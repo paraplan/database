@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 from src.client import db_client
 from src.generated_edgedb import (
@@ -14,6 +15,10 @@ from src.generated_edgedb import (
 router = APIRouter(prefix="/hours", tags=["Hours"])
 
 
+class HourPutItem(BaseModel):
+    sub_group_id: list[UUID]
+
+
 @router.get("", response_model=list[SelectHourByIdResult] | SelectHourByIdResult)
 async def get_hours(id: UUID | None = None):
     if id:
@@ -22,5 +27,5 @@ async def get_hours(id: UUID | None = None):
 
 
 @router.put("", response_model=InsertHourResult)
-async def put_hour(id: list[UUID]):
-    return await insert_hour(db_client, id=id)
+async def put_hour(item: HourPutItem):
+    return await insert_hour(db_client, sub_group_id=item.sub_group_id)
