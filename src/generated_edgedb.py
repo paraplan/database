@@ -4,10 +4,12 @@
 #     'src/queries/cabinets/insert_cabinet.edgeql'
 #     'src/queries/groups/insert_group.edgeql'
 #     'src/queries/hours/insert_hour.edgeql'
+#     'src/queries/study_days/insert_study_day.edgeql'
 #     'src/queries/subgroup_hours/insert_subgroup_hour.edgeql'
 #     'src/queries/groups/select_groups.edgeql'
 #     'src/queries/hours/select_hour_by_id.edgeql'
 #     'src/queries/hours/select_hours.edgeql'
+#     'src/queries/study_days/select_study_days.edgeql'
 #     'src/queries/subgroup_hours/select_subgroup_hours.edgeql'
 #     'src/queries/subgroup_hours/select_subgroup_hours_by_id.edgeql'
 # WITH:
@@ -17,6 +19,7 @@
 from __future__ import annotations
 
 import dataclasses
+import datetime
 import uuid
 
 import edgedb
@@ -54,6 +57,11 @@ class InsertHourResult(NoPydanticValidation):
 
 
 @dataclasses.dataclass
+class InsertStudyDayResult(NoPydanticValidation):
+    id: uuid.UUID
+
+
+@dataclasses.dataclass
 class InsertSubgroupHourResult(NoPydanticValidation):
     id: uuid.UUID
 
@@ -75,6 +83,19 @@ class SelectHourByIdResult(NoPydanticValidation):
 class SelectHourByIdResultSubGroupsItem(NoPydanticValidation):
     id: uuid.UUID
     occupation: str
+
+
+@dataclasses.dataclass
+class SelectStudyDaysResult(NoPydanticValidation):
+    id: uuid.UUID
+    date: datetime.datetime
+    group: SelectGroupsResult
+    hours: list[SelectStudyDaysResultHoursItem]
+
+
+@dataclasses.dataclass
+class SelectStudyDaysResultHoursItem(NoPydanticValidation):
+    id: uuid.UUID
 
 
 @dataclasses.dataclass
@@ -161,6 +182,30 @@ async def insert_hour(
     )
 
 
+async def insert_study_day(
+    executor: edgedb.AsyncIOExecutor,
+    *,
+    date: datetime.datetime,
+    group_id: uuid.UUID,
+    hour_ids: list[uuid.UUID],
+) -> InsertStudyDayResult:
+    return await executor.query_single(
+        """\
+        insert StudyDay {
+          date := <datetime>$date,
+          `group` := ( select `Group` filter .id = <uuid>$group_id ),
+          hours := (
+            select Hour
+            filter .id in array_unpack(<array<uuid>>$hour_ids)
+          ),
+        }\
+        """,
+        date=date,
+        group_id=group_id,
+        hour_ids=hour_ids,
+    )
+
+
 async def insert_subgroup_hour(
     executor: edgedb.AsyncIOExecutor,
     *,
@@ -208,6 +253,16 @@ async def select_hours(
     return await executor.query(
         """\
         select Hour{ ** };\
+        """,
+    )
+
+
+async def select_study_days(
+    executor: edgedb.AsyncIOExecutor,
+) -> list[SelectStudyDaysResult]:
+    return await executor.query(
+        """\
+        select StudyDay { ** };\
         """,
     )
 
