@@ -24,7 +24,7 @@ module default {
 	}
 
 	type Cabinet {
-		required room: str;
+		required room: str { constraint exclusive };
 		required name: str;
 	}
 

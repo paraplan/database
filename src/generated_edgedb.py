@@ -4,6 +4,7 @@
 #     'src/queries/cabinets/insert_cabinet.edgeql'
 #     'src/queries/groups/insert_group.edgeql'
 #     'src/queries/hours/insert_hour.edgeql'
+#     'src/queries/cabinets/insert_or_select_cabinet.edgeql'
 #     'src/queries/subgroup_hours/insert_subgroup_hour.edgeql'
 #     'src/queries/groups/select_groups.edgeql'
 #     'src/queries/hours/select_hour_by_id.edgeql'
@@ -134,8 +135,8 @@ async def insert_group(
     return await executor.query_single(
         """\
         insert `Group` {
-            full_name := <str>$full_name,
-            name := <str>$name,
+        	full_name := <str>$full_name,
+        	name := <str>$name,
         }\
         """,
         full_name=full_name,
@@ -158,6 +159,24 @@ async def insert_hour(
         }\
         """,
         id=id,
+    )
+
+
+async def insert_or_select_cabinet(
+    executor: edgedb.AsyncIOExecutor,
+    *,
+    name: str,
+    room: str,
+) -> DeleteCabinetResult:
+    return await executor.query_single(
+        """\
+        insert Cabinet {
+          name := <str>$name,
+          room := <str>$room
+        } unless conflict on .room else Cabinet;\
+        """,
+        name=name,
+        room=room,
     )
 
 
