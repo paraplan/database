@@ -135,8 +135,8 @@ async def insert_group(
     return await executor.query_single(
         """\
         insert `Group` {
-        	full_name := <str>$full_name,
-        	name := <str>$name,
+            full_name := <str>$full_name,
+            name := <str>$name,
         }\
         """,
         full_name=full_name,
