@@ -1,31 +1,22 @@
-from uuid import UUID
-
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.client import db_client
 from src.generated_edgedb import (
-    InsertHourResult,
-    SelectHourByIdResult,
-    insert_hour,
-    select_hour_by_id,
-    select_hours,
+    AddHourWithCabinetResult,
+    add_hour_with_cabinet,
 )
 
-router = APIRouter(prefix="/hours", tags=["Hours"])
+router = APIRouter(tags=["Hours"])
 
 
-class HourPutItem(BaseModel):
-    sub_group_id: list[UUID]
+class PutHourModel(BaseModel):
+    occupation: str
+    sub_group: int = Field("1")
+    cabinet_number: str
+    cabinet_details: str
 
 
-@router.get("", response_model=list[SelectHourByIdResult] | SelectHourByIdResult)
-async def get_hours(id: UUID | None = None):
-    if id:
-        return await select_hour_by_id(db_client, id=id)
-    return await select_hours(db_client)
-
-
-@router.put("", response_model=InsertHourResult)
-async def put_hour(item: HourPutItem):
-    return await insert_hour(db_client, sub_group_id=item.sub_group_id)
+@router.put("/hour", response_model=AddHourWithCabinetResult)
+async def put_hour(item: PutHourModel):
+    return await add_hour_with_cabinet(db_client, **item.model_dump())

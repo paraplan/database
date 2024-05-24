@@ -20,16 +20,15 @@ module default {
 	}
 
 	type Hour {
-		required multi sub_groups: SubGroupHour;
+		required sub_group: int16;
+		cabinet: Cabinet;
+		required occupation: str;
+
+		constraint exclusive on ((.cabinet, .occupation, .sub_group));
 	}
 
 	type Cabinet {
-		required room: str { constraint exclusive };
-		required name: str;
-	}
-
-	type SubGroupHour {
-		required occupation: str;
-		required cabinet: Cabinet;
+		required number: str { constraint exclusive };
+		required details: str;
 	}
 }
