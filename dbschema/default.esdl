@@ -2,6 +2,8 @@ module default {
 	type `Group` {
 		required name: str;
 		required full_name: str;
+
+		constraint exclusive on ((.name, .full_name));
 	}
 
 	type User {
@@ -17,14 +19,15 @@ module default {
 		required date: datetime;
 		required `group`: `Group`;
 		required multi hours: Hour;
+
+		constraint exclusive on ((.`group`, .date));
 	}
 
 	type Hour {
 		required sub_group: int16;
 		cabinet: Cabinet;
 		required occupation: str;
-
-		constraint exclusive on ((.cabinet, .occupation, .sub_group));
+		required number: int16;
 	}
 
 	type Cabinet {

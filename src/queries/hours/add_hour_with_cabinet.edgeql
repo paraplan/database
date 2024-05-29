@@ -9,4 +9,5 @@ insert Hour {
   sub_group := <int16>$sub_group,
   occupation := <str>$occupation,
   cabinet := cabinet,
-} unless conflict on (.occupation, .cabinet, .sub_group) else Hour;
+  number := <int16>$number,
+};
